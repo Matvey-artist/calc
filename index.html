@@ -113,69 +113,90 @@
   <div id="rentability"></div>
   <div id="comparison"></div>
 
-  <script>
-    function calculate() {
-      const area = parseFloat(document.getElementById("area").value);
-      const street = document.getElementById("street").value.split("|");
-      const pricePerM2 = parseFloat(street[0]);
-      const rentPerM2 = parseFloat(street[1]);
-      const condition = parseFloat(document.getElementById("condition").value);
-      const floor = parseInt(document.getElementById("floor").value);
-      const elevator = document.getElementById("elevator").value;
-      const userPrice = parseFloat(document.getElementById("userPrice").value);
-      const rooms = parseInt(document.getElementById("rooms").value);
-
-      if (isNaN(area) || isNaN(floor) || isNaN(rooms)) {
-        document.getElementById("result").innerText = "Por favor, introduce todos los datos.";
-        return;
+<script>
+  async function loadStreetData() {
+    const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vS_XOiJXSWt82oiO44oBV6Zj4YJESuBWIXR7wi7Su7hccX5n8xNGGj5e47dorbkuV5jiVexvF3VwJej/pub?output=csv');
+    const data = await response.text();
+    const rows = data.split('\n').slice(1);
+    const streetSelect = document.getElementById('street');
+    rows.forEach(row => {
+      const [calle, venta, alquiler] = row.split(',');
+      if (calle && venta && alquiler) {
+        const option = document.createElement('option');
+        option.value = `${venta}|${alquiler}`;
+        option.text = calle;
+        streetSelect.appendChild(option);
       }
+    });
+  }
 
-      let floorMultiplier = 1.0;
-      let elevatorMultiplier = 1.0;
-      let roomMultiplier = 1.0;
+  document.addEventListener('DOMContentLoaded', loadStreetData);
+</script>
 
-      if (elevator === "yes") {
-        elevatorMultiplier = 1.05;
-      } else {
-        if (floor === 1) floorMultiplier = 1.00;
-        else if (floor === 2) floorMultiplier = 0.98;
-        else if (floor === 3) floorMultiplier = 0.96;
-        else if (floor === 4) floorMultiplier = 0.94;
-        else if (floor >= 5) floorMultiplier = 0.92;
-      }
+<script>
+  function calculate() {
+    const area = parseFloat(document.getElementById("area").value);
+    const street = document.getElementById("street").value.split("|");
+    const pricePerM2 = parseFloat(street[0]);
+    const rentPerM2 = parseFloat(street[1]);
+    const condition = parseFloat(document.getElementById("condition").value);
+    const floor = parseInt(document.getElementById("floor").value);
+    const elevator = document.getElementById("elevator").value;
+    const userPrice = parseFloat(document.getElementById("userPrice").value);
+    const rooms = parseInt(document.getElementById("rooms").value);
 
-      if (rooms === 1) roomMultiplier = 0.95;
-      else if (rooms === 2) roomMultiplier = 1.00;
-      else if (rooms === 3) roomMultiplier = 1.05;
-      else if (rooms >= 4) roomMultiplier = 1.10;
-
-      const estimatedPrice = area * pricePerM2 * condition * floorMultiplier * elevatorMultiplier * roomMultiplier;
-      const estimatedRent = area * rentPerM2;
-      const rentability = ((estimatedRent * 12) / estimatedPrice * 100).toFixed(2);
-
-      document.getElementById("result").innerText = `Valor estimado: ${Math.round(estimatedPrice).toLocaleString()} €`;
-      document.getElementById("rent").innerText = `Alquiler estimado: ${Math.round(estimatedRent).toLocaleString()} €/mes`;
-      document.getElementById("rentability").innerText = `Rentabilidad anual: ${rentability}%`;
-
-      if (!isNaN(userPrice)) {
-        const ratio = userPrice / estimatedPrice;
-        let message = "", cls = "";
-
-        if (ratio < 0.9) {
-          message = "Precio por debajo del mercado (posible venta rápida)";
-          cls = "good";
-        } else if (ratio <= 1.1) {
-          message = "Precio acorde al mercado";
-          cls = "good";
-        } else {
-          message = "Precio elevado, considera bajarlo";
-          cls = "bad";
-        }
-
-        document.getElementById("comparison").innerHTML = `<span class="${cls}">${message}</span>`;
-      }
+    if (isNaN(area) || isNaN(floor) || isNaN(rooms)) {
+      document.getElementById("result").innerText = "Por favor, introduce todos los datos.";
+      return;
     }
-  </script>
+
+    let floorMultiplier = 1.0;
+    let elevatorMultiplier = 1.0;
+    let roomMultiplier = 1.0;
+
+    if (elevator === "yes") {
+      elevatorMultiplier = 1.05;
+    } else {
+      if (floor === 1) floorMultiplier = 1.00;
+      else if (floor === 2) floorMultiplier = 0.98;
+      else if (floor === 3) floorMultiplier = 0.96;
+      else if (floor === 4) floorMultiplier = 0.94;
+      else if (floor >= 5) floorMultiplier = 0.92;
+    }
+
+    if (rooms === 1) roomMultiplier = 0.95;
+    else if (rooms === 2) roomMultiplier = 1.00;
+    else if (rooms === 3) roomMultiplier = 1.05;
+    else if (rooms >= 4) roomMultiplier = 1.10;
+
+    const estimatedPrice = area * pricePerM2 * condition * floorMultiplier * elevatorMultiplier * roomMultiplier;
+    const estimatedRent = area * rentPerM2;
+    const rentability = ((estimatedRent * 12) / estimatedPrice * 100).toFixed(2);
+
+    document.getElementById("result").innerText = `Valor estimado: ${Math.round(estimatedPrice).toLocaleString()} €`;
+    document.getElementById("rent").innerText = `Alquiler estimado: ${Math.round(estimatedRent).toLocaleString()} €/mes`;
+    document.getElementById("rentability").innerText = `Rentabilidad anual: ${rentability}%`;
+
+    if (!isNaN(userPrice)) {
+      const ratio = userPrice / estimatedPrice;
+      let message = "", cls = "";
+
+      if (ratio < 0.9) {
+        message = "Precio por debajo del mercado (posible venta rápida)";
+        cls = "good";
+      } else if (ratio <= 1.1) {
+        message = "Precio acorde al mercado";
+        cls = "good";
+      } else {
+        message = "Precio elevado, considera bajarlo";
+        cls = "bad";
+      }
+
+      document.getElementById("comparison").innerHTML = `<span class="${cls}">${message}</span>`;
+    }
+  }
+</script>
+
 
 </body>
 </html>
