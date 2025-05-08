@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Калькулятор недвижимости — Мадрид</title>
+  <title>Calculadora de Inmuebles — Madrid</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -62,12 +62,12 @@
 </head>
 <body>
 
-  <h1>Калькулятор недвижимости — Мадрид</h1>
+  <h1>Calculadora de Inmuebles — Madrid</h1>
 
-  <label for="area">Площадь (м²):</label>
+  <label for="area">Superficie (m²):</label>
   <input type="number" id="area" min="20" max="500" />
 
-  <label for="district">Район Мадрида:</label>
+  <label for="district">Distrito de Madrid:</label>
   <select id="district">
     <option value="9589" data-name="Salamanca">Salamanca</option>
     <option value="7871" data-name="Chamberí">Chamberí</option>
@@ -79,39 +79,39 @@
     <option value="2294" data-name="Villaverde">Villaverde</option>
   </select>
 
-  <label for="propertyType">Тип недвижимости:</label>
+  <label for="propertyType">Tipo de propiedad:</label>
   <select id="propertyType">
-    <option value="1.00">Квартира</option>
-    <option value="0.95">Апартаменты</option>
-    <option value="1.10">Пентхаус</option>
-    <option value="1.05">Таунхаус</option>
-    <option value="1.20">Вилла</option>
-    <option value="0.90">Загородный дом</option>
-    <option value="1.15">Коммерческое помещение</option>
-    <option value="0.50">Гараж</option>
-    <option value="0.30">Склад</option>
+    <option value="1.00">Piso</option>
+    <option value="0.95">Apartamento</option>
+    <option value="1.10">Ático</option>
+    <option value="1.05">Adosado</option>
+    <option value="1.20">Villa</option>
+    <option value="0.90">Casa de campo</option>
+    <option value="1.15">Local comercial</option>
+    <option value="0.50">Garaje</option>
+    <option value="0.30">Almacén</option>
   </select>
 
-  <label for="condition">Состояние жилья:</label>
+  <label for="condition">Estado de la propiedad:</label>
   <select id="condition">
-    <option value="1.0">Новое / Отличное</option>
-    <option value="0.9">Хорошее</option>
-    <option value="0.75">Нужен ремонт</option>
+    <option value="1.0">Nuevo / Excelente</option>
+    <option value="0.9">Bueno</option>
+    <option value="0.75">Necesita reforma</option>
   </select>
 
-  <label for="floor">Этаж:</label>
+  <label for="floor">Planta:</label>
   <input type="number" id="floor" min="1" max="30" />
 
-  <label for="elevator">Лифт:</label>
+  <label for="elevator">Ascensor:</label>
   <select id="elevator">
-    <option value="yes">Есть</option>
-    <option value="no">Нет</option>
+    <option value="yes">Sí</option>
+    <option value="no">No</option>
   </select>
 
-  <label for="userPrice">Цена, которую вы хотите (€):</label>
+  <label for="userPrice">Precio que desea (€):</label>
   <input type="number" id="userPrice" min="10000" />
 
-  <button onclick="calculate()">Рассчитать стоимость</button>
+  <button onclick="calculate()">Calcular precio</button>
 
   <div id="result"></div>
   <div id="rent"></div>
@@ -143,7 +143,7 @@
       const userPrice = parseFloat(document.getElementById("userPrice").value);
 
       if (isNaN(area) || area < 20 || isNaN(floor)) {
-        document.getElementById("result").innerText = "Пожалуйста, введите корректные данные.";
+        document.getElementById("result").innerText = "Por favor, introduzca datos válidos.";
         return;
       }
 
@@ -161,14 +161,14 @@
       }
 
       const marketPrice = area * districtPrice * propertyType * condition * floorMultiplier * elevatorMultiplier;
-      document.getElementById("result").innerText = `Оценочная стоимость: ${Math.round(marketPrice).toLocaleString()} €`;
+      document.getElementById("result").innerText = `Valor estimado: ${Math.round(marketPrice).toLocaleString()} €`;
 
       if (!isNaN(rentPricePerM2)) {
         const rentPerMonth = area * rentPricePerM2;
         const yearlyRent = rentPerMonth * 12;
         const rentability = ((yearlyRent / marketPrice) * 100).toFixed(2);
-        document.getElementById("rent").innerText = `Оценочная аренда: ${Math.round(rentPerMonth).toLocaleString()} €/мес`;
-        document.getElementById("rentability").innerText = `Годовая рентабельность: ${rentability}%`;
+        document.getElementById("rent").innerText = `Alquiler estimado: ${Math.round(rentPerMonth).toLocaleString()} €/mes`;
+        document.getElementById("rentability").innerText = `Rentabilidad anual: ${rentability}%`;
       }
 
       if (!isNaN(userPrice)) {
@@ -177,13 +177,13 @@
         let cls = "";
 
         if (ratio < 0.9) {
-          message = "Цена ниже рынка (может продаться быстро)";
+          message = "Precio por debajo del mercado (posible venta rápida)";
           cls = "good";
         } else if (ratio >= 0.9 && ratio <= 1.1) {
-          message = "Цена рыночная";
+          message = "Precio en línea con el mercado";
           cls = "good";
         } else {
-          message = "Цена завышена, рекомендуется снизить";
+          message = "Precio elevado, se recomienda bajarlo";
           cls = "bad";
         }
 
