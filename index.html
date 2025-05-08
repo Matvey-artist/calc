@@ -117,40 +117,40 @@
       const data = await response.text();
       const rows = data.split('\n').slice(1);
       const streetSelect = document.getElementById('street');
-      const selected = streetSelect.value;
-      streetSelect.innerHTML = ''; // очистка
+      const selectedText = streetSelect.options[streetSelect.selectedIndex]?.text;
 
+      const newOptions = [];
       rows.forEach(row => {
         const [calle, venta, alquiler] = row.split(',');
         if (calle && venta && alquiler) {
           const key = calle.trim();
-          const current = `${venta}|${alquiler}`;
+          const value = `${parseFloat(venta).toFixed(2)}|${parseFloat(alquiler).toFixed(2)}`;
           const previous = lastPrices[key];
-
-          if (previous && previous !== current) {
+          if (previous && previous !== value) {
             const [oldVenta] = previous.split('|');
             const diff = parseFloat(venta) - parseFloat(oldVenta);
-            if (Math.abs(diff) > 0.01) {
+            if (Math.abs(diff) > 0.1) {
               const el = document.getElementById("result");
               el.classList.add(diff > 0 ? 'flash-green' : 'flash-red');
               setTimeout(() => el.classList.remove('flash-green', 'flash-red'), 800);
             }
           }
-
-          lastPrices[key] = current;
-
+          lastPrices[key] = value;
           const option = document.createElement('option');
-          option.value = current;
+          option.value = value;
           option.text = key;
-          if (option.value === selected) option.selected = true;
-          streetSelect.appendChild(option);
+          if (key === selectedText) option.selected = true;
+          newOptions.push(option);
         }
       });
+
+      streetSelect.innerHTML = '';
+      newOptions.forEach(opt => streetSelect.appendChild(opt));
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       loadStreetData();
-      setInterval(loadStreetData, 1000);
+      setInterval(loadStreetData, 30000); // обновление каждые 30 сек
     });
 
     function calculate() {
