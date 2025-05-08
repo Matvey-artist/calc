@@ -69,20 +69,7 @@
   <input type="number" id="area" min="1" max="1000" />
 
   <label for="street">Calle:</label>
-  <select id="street">
-    <option value="4746|24.35">Calle del Acueducto</option>
-    <option value="4905|23.54">Avenida Doctor Federico Rubio y Galí</option>
-    <option value="5474|25.61">Calle Enrique I</option>
-    <option value="4746|24.35">Calle Francisco Balseiro</option>
-    <option value="4746|24.35">Calle María Ignacia</option>
-    <option value="4746|24.35">Calle Pedro Rogel</option>
-    <option value="5414|23.21">Calle San Raimundo</option>
-    <option value="5479|24.35">Calle San Rogelio</option>
-    <option value="4746|24.35">Calle San Valeriano</option>
-    <option value="4746|24.35">Calle Santa Juliana</option>
-    <option value="4746|24.35">Calle Tudelilla</option>
-    <option value="4746|24.35">Calle Zamora</option>
-  </select>
+  <select id="street"></select>
 
   <label for="rooms">Número de habitaciones:</label>
   <input type="number" id="rooms" min="0" max="10" />
@@ -113,90 +100,87 @@
   <div id="rentability"></div>
   <div id="comparison"></div>
 
-<script>
-  async function loadStreetData() {
-    const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vS_XOiJXSWt82oiO44oBV6Zj4YJESuBWIXR7wi7Su7hccX5n8xNGGj5e47dorbkuV5jiVexvF3VwJej/pub?output=csv');
-    const data = await response.text();
-    const rows = data.split('\n').slice(1);
-    const streetSelect = document.getElementById('street');
-    rows.forEach(row => {
-      const [calle, venta, alquiler] = row.split(',');
-      if (calle && venta && alquiler) {
-        const option = document.createElement('option');
-        option.value = `${venta}|${alquiler}`;
-        option.text = calle;
-        streetSelect.appendChild(option);
+  <script>
+    async function loadStreetData() {
+      const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vS_XOiJXSWt82oiO44oBV6Zj4YJESuBWIXR7wi7Su7hccX5n8xNGGj5e47dorbkuV5jiVexvF3VwJej/pub?output=csv');
+      const data = await response.text();
+      const rows = data.split('\n').slice(1);
+      const streetSelect = document.getElementById('street');
+      rows.forEach(row => {
+        const [calle, venta, alquiler] = row.split(',');
+        if (calle && venta && alquiler) {
+          const option = document.createElement('option');
+          option.value = `${venta}|${alquiler}`;
+          option.text = calle;
+          streetSelect.appendChild(option);
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadStreetData);
+
+    function calculate() {
+      const area = parseFloat(document.getElementById("area").value);
+      const street = document.getElementById("street").value.split("|");
+      const pricePerM2 = parseFloat(street[0]);
+      const rentPerM2 = parseFloat(street[1]);
+      const condition = parseFloat(document.getElementById("condition").value);
+      const floor = parseInt(document.getElementById("floor").value);
+      const elevator = document.getElementById("elevator").value;
+      const userPrice = parseFloat(document.getElementById("userPrice").value);
+      const rooms = parseInt(document.getElementById("rooms").value);
+
+      if (isNaN(area) || isNaN(floor) || isNaN(rooms)) {
+        document.getElementById("result").innerText = "Por favor, introduce todos los datos.";
+        return;
       }
-    });
-  }
 
-  document.addEventListener('DOMContentLoaded', loadStreetData);
-</script>
+      let floorMultiplier = 1.0;
+      let elevatorMultiplier = 1.0;
+      let roomMultiplier = 1.0;
 
-<script>
-  function calculate() {
-    const area = parseFloat(document.getElementById("area").value);
-    const street = document.getElementById("street").value.split("|");
-    const pricePerM2 = parseFloat(street[0]);
-    const rentPerM2 = parseFloat(street[1]);
-    const condition = parseFloat(document.getElementById("condition").value);
-    const floor = parseInt(document.getElementById("floor").value);
-    const elevator = document.getElementById("elevator").value;
-    const userPrice = parseFloat(document.getElementById("userPrice").value);
-    const rooms = parseInt(document.getElementById("rooms").value);
-
-    if (isNaN(area) || isNaN(floor) || isNaN(rooms)) {
-      document.getElementById("result").innerText = "Por favor, introduce todos los datos.";
-      return;
-    }
-
-    let floorMultiplier = 1.0;
-    let elevatorMultiplier = 1.0;
-    let roomMultiplier = 1.0;
-
-    if (elevator === "yes") {
-      elevatorMultiplier = 1.05;
-    } else {
-      if (floor === 1) floorMultiplier = 1.00;
-      else if (floor === 2) floorMultiplier = 0.98;
-      else if (floor === 3) floorMultiplier = 0.96;
-      else if (floor === 4) floorMultiplier = 0.94;
-      else if (floor >= 5) floorMultiplier = 0.92;
-    }
-
-    if (rooms === 1) roomMultiplier = 0.95;
-    else if (rooms === 2) roomMultiplier = 1.00;
-    else if (rooms === 3) roomMultiplier = 1.05;
-    else if (rooms >= 4) roomMultiplier = 1.10;
-
-    const estimatedPrice = area * pricePerM2 * condition * floorMultiplier * elevatorMultiplier * roomMultiplier;
-    const estimatedRent = area * rentPerM2;
-    const rentability = ((estimatedRent * 12) / estimatedPrice * 100).toFixed(2);
-
-    document.getElementById("result").innerText = `Valor estimado: ${Math.round(estimatedPrice).toLocaleString()} €`;
-    document.getElementById("rent").innerText = `Alquiler estimado: ${Math.round(estimatedRent).toLocaleString()} €/mes`;
-    document.getElementById("rentability").innerText = `Rentabilidad anual: ${rentability}%`;
-
-    if (!isNaN(userPrice)) {
-      const ratio = userPrice / estimatedPrice;
-      let message = "", cls = "";
-
-      if (ratio < 0.9) {
-        message = "Precio por debajo del mercado (posible venta rápida)";
-        cls = "good";
-      } else if (ratio <= 1.1) {
-        message = "Precio acorde al mercado";
-        cls = "good";
+      if (elevator === "yes") {
+        elevatorMultiplier = 1.05;
       } else {
-        message = "Precio elevado, considera bajarlo";
-        cls = "bad";
+        if (floor === 1) floorMultiplier = 1.00;
+        else if (floor === 2) floorMultiplier = 0.98;
+        else if (floor === 3) floorMultiplier = 0.96;
+        else if (floor === 4) floorMultiplier = 0.94;
+        else if (floor >= 5) floorMultiplier = 0.92;
       }
 
-      document.getElementById("comparison").innerHTML = `<span class="${cls}">${message}</span>`;
-    }
-  }
-</script>
+      if (rooms === 1) roomMultiplier = 0.95;
+      else if (rooms === 2) roomMultiplier = 1.00;
+      else if (rooms === 3) roomMultiplier = 1.05;
+      else if (rooms >= 4) roomMultiplier = 1.10;
 
+      const estimatedPrice = area * pricePerM2 * condition * floorMultiplier * elevatorMultiplier * roomMultiplier;
+      const estimatedRent = area * rentPerM2;
+      const rentability = ((estimatedRent * 12) / estimatedPrice * 100).toFixed(2);
+
+      document.getElementById("result").innerText = `Valor estimado: ${Math.round(estimatedPrice).toLocaleString()} €`;
+      document.getElementById("rent").innerText = `Alquiler estimado: ${Math.round(estimatedRent).toLocaleString()} €/mes`;
+      document.getElementById("rentability").innerText = `Rentabilidad anual: ${rentability}%`;
+
+      if (!isNaN(userPrice)) {
+        const ratio = userPrice / estimatedPrice;
+        let message = "", cls = "";
+
+        if (ratio < 0.9) {
+          message = "Precio por debajo del mercado (posible venta rápida)";
+          cls = "good";
+        } else if (ratio <= 1.1) {
+          message = "Precio acorde al mercado";
+          cls = "good";
+        } else {
+          message = "Precio elevado, considera bajarlo";
+          cls = "bad";
+        }
+
+        document.getElementById("comparison").innerHTML = `<span class="${cls}">${message}</span>`;
+      }
+    }
+  </script>
 
 </body>
 </html>
