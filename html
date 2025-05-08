@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Калькулятор недвижимости — Мадрид</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+      padding: 40px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #result, #rent, #comparison, #rentability {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .good { color: green; }
+    .warn { color: orange; }
+    .bad  { color: red; }
+  </style>
+</head>
+<body>
+
+  <h1>Калькулятор недвижимости — Мадрид</h1>
+
+  <label for="area">Площадь (м²):</label>
+  <input type="number" id="area" min="20" max="500" />
+
+  <label for="district">Район Мадрида:</label>
+  <select id="district">
+    <option value="9589" data-name="Salamanca">Salamanca</option>
+    <option value="7871" data-name="Chamberí">Chamberí</option>
+    <option value="7110" data-name="Chamartín">Chamartín</option>
+    <option value="6994" data-name="Centro">Centro</option>
+    <option value="5306" data-name="Tetuán">Tetuán</option>
+    <option value="3140" data-name="Carabanchel">Carabanchel</option>
+    <option value="2880" data-name="Usera">Usera</option>
+    <option value="2294" data-name="Villaverde">Villaverde</option>
+  </select>
+
+  <label for="propertyType">Тип недвижимости:</label>
+  <select id="propertyType">
+    <option value="1.00">Квартира</option>
+    <option value="0.95">Апартаменты</option>
+    <option value="1.10">Пентхаус</option>
+    <option value="1.05">Таунхаус</option>
+    <option value="1.20">Вилла</option>
+    <option value="0.90">Загородный дом</option>
+    <option value="1.15">Коммерческое помещение</option>
+    <option value="0.50">Гараж</option>
+    <option value="0.30">Склад</option>
+  </select>
+
+  <label for="condition">Состояние жилья:</label>
+  <select id="condition">
+    <option value="1.0">Новое / Отличное</option>
+    <option value="0.9">Хорошее</option>
+    <option value="0.75">Нужен ремонт</option>
+  </select>
+
+  <label for="floor">Этаж:</label>
+  <input type="number" id="floor" min="1" max="30" />
+
+  <label for="elevator">Лифт:</label>
+  <select id="elevator">
+    <option value="yes">Есть</option>
+    <option value="no">Нет</option>
+  </select>
+
+  <label for="userPrice">Цена, которую вы хотите (€):</label>
+  <input type="number" id="userPrice" min="10000" />
+
+  <button onclick="calculate()">Рассчитать стоимость</button>
+
+  <div id="result"></div>
+  <div id="rent"></div>
+  <div id="rentability"></div>
+  <div id="comparison"></div>
+
+  <script>
+    const rentPrices = {
+      "Salamanca": 27.72,
+      "Chamberí": 27.33,
+      "Centro": 27.72,
+      "Chamartín": 25.33,
+      "Tetuán": 24.91,
+      "Carabanchel": 19.75,
+      "Usera": 23.03,
+      "Villaverde": 17.53
+    };
+
+    function calculate() {
+      const area = parseFloat(document.getElementById("area").value);
+      const districtElement = document.getElementById("district");
+      const districtPrice = parseFloat(districtElement.value);
+      const selectedDistrict = districtElement.options[districtElement.selectedIndex].getAttribute("data-name");
+      const rentPricePerM2 = rentPrices[selectedDistrict];
+      const propertyType = parseFloat(document.getElementById("propertyType").value);
+      const condition = parseFloat(document.getElementById("condition").value);
+      const floor = parseInt(document.getElementById("floor").value);
+      const elevator = document.getElementById("elevator").value;
+      const userPrice = parseFloat(document.getElementById("userPrice").value);
+
+      if (isNaN(area) || area < 20 || isNaN(floor)) {
+        document.getElementById("result").innerText = "Пожалуйста, введите корректные данные.";
+        return;
+      }
+
+      let floorMultiplier = 1.0;
+      let elevatorMultiplier = 1.0;
+
+      if (elevator === "yes") {
+        elevatorMultiplier = 1.05;
+      } else {
+        if (floor === 1) floorMultiplier = 1.00;
+        else if (floor === 2) floorMultiplier = 0.98;
+        else if (floor === 3) floorMultiplier = 0.96;
+        else if (floor === 4) floorMultiplier = 0.94;
+        else if (floor >= 5) floorMultiplier = 0.92;
+      }
+
+      const marketPrice = area * districtPrice * propertyType * condition * floorMultiplier * elevatorMultiplier;
+      document.getElementById("result").innerText = `Оценочная стоимость: ${Math.round(marketPrice).toLocaleString()} €`;
+
+      if (!isNaN(rentPricePerM2)) {
+        const rentPerMonth = area * rentPricePerM2;
+        const yearlyRent = rentPerMonth * 12;
+        const rentability = ((yearlyRent / marketPrice) * 100).toFixed(2);
+        document.getElementById("rent").innerText = `Оценочная аренда: ${Math.round(rentPerMonth).toLocaleString()} €/мес`;
+        document.getElementById("rentability").innerText = `Годовая рентабельность: ${rentability}%`;
+      }
+
+      if (!isNaN(userPrice)) {
+        const ratio = userPrice / marketPrice;
+        let message = "";
+        let cls = "";
+
+        if (ratio < 0.9) {
+          message = "Цена ниже рынка (может продаться быстро)";
+          cls = "good";
+        } else if (ratio >= 0.9 && ratio <= 1.1) {
+          message = "Цена рыночная";
+          cls = "good";
+        } else {
+          message = "Цена завышена, рекомендуется снизить";
+          cls = "bad";
+        }
+
+        document.getElementById("comparison").innerHTML = `<span class="${cls}">${message}</span>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
