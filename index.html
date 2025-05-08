@@ -88,6 +88,7 @@
     #qr-container {
       text-align: center;
       margin-top: 30px;
+      display: none;
     }
 
     #qrcode {
@@ -235,8 +236,11 @@
         document.getElementById("comparison").innerHTML = `<span class="${cls}">${message}</span>`;
       }
 
-      const waMsg = `Hola, valoré mi propiedad en ${streetName}, ${area} m². Valor estimado: ${Math.round(estimatedPrice)} €.`;
+      const waMsg = `Mira la valoración que hice en Tecnocasa Bellas Vistas:\n${streetName}, ${area} m². Valor estimado: ${Math.round(estimatedPrice)} €.`;
       document.getElementById("whatsappBtn").href = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
+
+      document.getElementById("qr-container").style.display = "block";
+      shareQR();  // Generar automáticamente
     }
 
     function shareQR() {
